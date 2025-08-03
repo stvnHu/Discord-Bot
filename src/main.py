@@ -1,14 +1,13 @@
 
-import os
-from dotenv import load_dotenv
+from pathlib import Path
+from dotenv import dotenv_values
 import discord
 
-load_dotenv()
-BOT_TOKEN = os.getenv("BOT_TOKEN")
+ROOT_DIR = Path(__file__).parent.parent
+COG_DIR = ROOT_DIR / "src" / "cogs"
+cogs = [cog.stem for cog in COG_DIR.iterdir() if cog.suffix == ".py" and cog.stem != "__init__"]
 
-COG_DIR = "./src/cogs"
-cogs = [os.path.splitext(cog)[0] for cog in os.listdir(COG_DIR) if cog != "__init__.py" and cog.endswith('.py')]
-
+BOT_TOKEN = dotenv_values(ROOT_DIR / ".env").get("BOT_TOKEN")
 bot = discord.Bot(intents=discord.Intents.default())
 
 @bot.event
@@ -19,7 +18,7 @@ def main():
     for cog in cogs:
         try:
             bot.load_extension(f"cogs.{cog}")
-            print(f"Loaded {cog}")
+            print(f"Loaded {cog}.py")
         except Exception as e:
             print(f"Failed to load {cog}.py")
 
