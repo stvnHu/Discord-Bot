@@ -2,26 +2,33 @@
 from pathlib import Path
 from dotenv import dotenv_values
 import discord
+from discord.ext import commands
 
 ROOT_DIR = Path(__file__).parent.parent
 COG_DIR = ROOT_DIR / "src" / "cogs"
-cogs = [cog.stem for cog in COG_DIR.iterdir() if cog.suffix == ".py" and cog.stem != "__init__"]
-
 BOT_TOKEN = dotenv_values(ROOT_DIR / ".env").get("BOT_TOKEN")
-bot = discord.Bot(intents=discord.Intents.default())
 
-@bot.event
-async def on_ready():
-    print("Bot Ready")
+class Bot(commands.Bot):
+    def __init__(self):
+        intents = discord.Intents.default()
+        intents.message_content = True
+        super().__init__(command_prefix="$", intents=intents)
+
+    async def setup_hook(self):
+        for cog in COG_DIR.iterdir():
+            if cog.suffix == ".py" and cog.stem != "__init__":
+                try:
+                    await self.load_extension(f"cogs.{cog.stem}")
+                    print(f"Loaded {cog}")
+                except Exception as e:
+                    print(f"Failed to load {cog}")
+
+    async def on_ready(self):
+        await self.tree.sync()
+        print("Bot Ready")
 
 def main():
-    for cog in cogs:
-        try:
-            bot.load_extension(f"cogs.{cog}")
-            print(f"Loaded {cog}.py")
-        except Exception as e:
-            print(f"Failed to load {cog}.py")
-
+    bot = Bot()
     bot.run(BOT_TOKEN)
 
 if __name__ == "__main__":

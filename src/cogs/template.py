@@ -2,21 +2,21 @@
 #Template Cog
 
 
-import discord
 from discord.ext import commands
+from discord import app_commands
 
 class Template(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
     
-    @discord.slash_command(name="ping", description="Replies with the bot's latency.")
-    async def ping(self, ctx):
+    @app_commands.command(description="Replies with a greeting.")
+    async def hello(self, interaction):
+        await interaction.response.send_message(f"Hello, {interaction.user}!")
+
+    @app_commands.command(description="Replies with the bot's latency.")
+    async def ping(self, interaction):
         latency = self.bot.latency * 1000
-        await ctx.respond(f"Pong! Latency is {latency:.2f}ms")
+        await interaction.response.send_message(f"Latency: {latency:.2f}ms")
 
-    @discord.slash_command(name="hello", description="Say hello to the bot!")
-    async def hello(self, ctx):
-        await ctx.respond(f"Hello, {ctx.author.mention}!")
-
-def setup(bot):
-    bot.add_cog(Template(bot))
+async def setup(bot):
+    await bot.add_cog(Template(bot))
