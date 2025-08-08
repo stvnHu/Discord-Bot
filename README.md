@@ -9,4 +9,9 @@ Linux
 python3 -m venv venv  
 source venv/bin/activate  
 
-pip install discord.py, python-dotenv, openai
+pip install  
+discord.py  
+python-dotenv  
+openai  
+
+pip install -r requirements.txt
