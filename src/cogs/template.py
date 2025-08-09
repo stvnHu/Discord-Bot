@@ -1,7 +1,6 @@
 
 #Template Cog
 
-
 from discord.ext import commands
 from discord import app_commands
 
@@ -18,5 +17,10 @@ class Template(commands.Cog):
         latency = self.bot.latency * 1000
         await interaction.response.send_message(f"Latency: {latency:.2f}ms")
 
+    @app_commands.command(description="Sync commands.")
+    async def sync(self, interaction):
+        await self.bot.tree.sync()
+        await interaction.response.send_message(f"Commands synced.")
+ 
 async def setup(bot):
     await bot.add_cog(Template(bot))
