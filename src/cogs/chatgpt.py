@@ -1,32 +1,46 @@
 
+import re
 from pathlib import Path
 from dotenv import dotenv_values
 from openai import OpenAI
 from discord.ext import commands
 from discord import app_commands
 
-ROOT_DIR = Path(__file__).parent.parent.parent
-OPENAI_API_KEY = dotenv_values(ROOT_DIR / ".env").get("OPENAI_API_KEY")
-AI = OpenAI(api_key=OPENAI_API_KEY)
+OPENAI_API_KEY = dotenv_values(Path(__file__).parent.parent.parent / ".env").get("OPENAI_API_KEY")
 
 class ChatGPT(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
+        self.AI = OpenAI(api_key=OPENAI_API_KEY)
+        self.history = [{"role": "system", "content": "Answer as if you are a human expert on the topic with no mention of being an AI."}]
+        self.SPLIT_SIZE = 1800
 
-    @app_commands.command(description="Asks ChatGPT a question.")
-    async def chatgpt(self, interaction, question: str):
+    gpt = app_commands.Group(name="gpt", description="ChatGPT related commands.")
+    
+    @gpt.command(name="ask", description="Ask ChatGPT a question.")
+    async def gptAsk(self, interaction, question: str):
         await interaction.response.defer()
         try:
-            response = AI.chat.completions.create(
+            self.history.append({"role": "user", "content": question})
+            response = self.AI.chat.completions.create(
                 model="gpt-4o-mini",
-                messages=[
-                    {"role": "system", "content": "Keep responses under 1500 characters."},
-                    {"role": "user", "content": question}
-                ]
+                messages=self.history
             )
-            await interaction.followup.send(question + "\n\n" + response.choices[0].message.content)
+            totalResponseMessage = f"{question} \n\n {response.choices[0].message.content}"
+            breaks = [b.start() + 1 for b in re.finditer(r"\n\s*\n", totalResponseMessage)]
+            start = 0
+            for b in breaks:
+                if b > start + self.SPLIT_SIZE:
+                    await interaction.followup.send(f"```{totalResponseMessage[start:b - 1]}```")
+                    start = b - 1
+            await interaction.followup.send(f"```{totalResponseMessage[start:]}```")
         except Exception as e:
-             await interaction.followup.send("Response failed.")
+            await interaction.followup.send(f"Response failed: {e}")
+    
+    @gpt.command(name="clear", description="Clear ChatGPT chat history.")
+    async def gptClearHistory(self, interaction):
+        self.history[:] = self.history[:1]
+        await interaction.response.send_message("History cleared.")
 
 async def setup(bot):
     await bot.add_cog(ChatGPT(bot))

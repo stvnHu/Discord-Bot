@@ -19,12 +19,11 @@ class Bot(commands.Bot):
             if cog.suffix == ".py" and cog.stem != "__init__":
                 try:
                     await self.load_extension(f"cogs.{cog.stem}")
-                    print(f"Loaded {cog}")
+                    print(f"Loaded {cog.name}")
                 except Exception as e:
-                    print(f"Failed to load {cog}")
+                    print(f"Failed to load {cog.name}")
 
     async def on_ready(self):
-        await self.tree.sync()
         print("Bot Ready")
 
 def main():
