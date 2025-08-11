@@ -2,9 +2,11 @@
 import re
 from pathlib import Path
 from dotenv import dotenv_values
-from openai import OpenAI
 from discord.ext import commands
 from discord import app_commands
+from openai import OpenAI
+import base64
+from io import BytesIO
 
 OPENAI_API_KEY = dotenv_values(Path(__file__).parent.parent.parent / ".env").get("OPENAI_API_KEY")
 
@@ -41,6 +43,21 @@ class ChatGPT(commands.Cog):
     async def gptClearHistory(self, interaction):
         self.history[:] = self.history[:1]
         await interaction.response.send_message("History cleared.")
+
+    @gpt.command(name="img", description="Generate an image.")
+    async def gptImage(self, interaction, prompt: str):
+        await interaction.response.defer()
+        try:
+            image = self.AI.images.generate(
+                model="gpt-image-1",
+                prompt=prompt,
+                size="1024x1024"
+            )
+            await interaction.followup.send(file=discord.File(BytesIO(base64.b64decode(image))))
+        except Exception as e:
+            await interaction.followup.send(f"Response failed: {e}")
+        finally:
+            await interaction.followup.send("Feature abandoned (costs money)")
 
 async def setup(bot):
     await bot.add_cog(ChatGPT(bot))
