@@ -1,11 +1,10 @@
 # Discord-Bot
-Python version 3.12
+Python version 3.12  
 
-pip install  
-discord.py  
-python-dotenv  
-openai  
+pip install -r requirements.txt  
 
-or
+create a .env file  
+inside the .env file put:  
+BOT_TOKEN=  
+OPENAI_API_KEY=  
 
-pip install -r requirements.txt
